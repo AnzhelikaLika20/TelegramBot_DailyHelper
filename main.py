@@ -6,6 +6,9 @@ import telebot
 from telebot import types
 import time
 import logging
+import schedule
+from multiprocessing import *
+
 
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
@@ -63,7 +66,7 @@ def zodiac_markup(markup):
     item8 = types.KeyboardButton('Телец')
     item9 = types.KeyboardButton('Рак')
     item10 = types.KeyboardButton('Козерог')
-    item11 = types.KeyboardButton('Стрлец')
+    item11 = types.KeyboardButton('Стрелец')
     item12 = types.KeyboardButton('Дева')
     markup.add(item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12)
     return markup
@@ -77,7 +80,7 @@ def start_handler(message):
     logging.info(f'{user_id} {user_full_name} {time.asctime()}')
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     zodiac_markup(markup)
-    bot.send_message(message.chat.id, f"Привет, {user_full_name}! {MSG}", reply_markup=markup)
+    bot.send_message(message.chat.id, f"Привет, {user_name}! {MSG}", reply_markup=markup)
 
 
 @bot.message_handler(content_types=["text"])
@@ -135,9 +138,21 @@ def go_send_messages(message):
                              reply_markup=markup)
 
 
+def start_process():
+    Process(target=start_schedule, args=()).start()
+
+
+def start_schedule():
+    schedule.every().day.at("00:01").do(prepare_predictions())
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
 if __name__ == "__main__":
     try:
         prepare_predictions()
+        start_process()
         bot.polling(none_stop=True)
     except ConnectionError as e:
         print('Ошибка соединения: ', e)

@@ -143,7 +143,7 @@ def start_process():
 
 
 def start_schedule():
-    schedule.every().day.at("00:01").do(prepare_predictions())
+    schedule.every().day.at("00:01").do(prepare_predictions)
     while True:
         schedule.run_pending()
         time.sleep(1)

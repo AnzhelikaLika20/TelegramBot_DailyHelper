@@ -151,7 +151,9 @@ def start_schedule():
 
 if __name__ == "__main__":
     try:
+        print("start")
         prepare_predictions()
+        print("preparations were made")
         start_process()
         bot.polling(none_stop=True)
     except ConnectionError as e:

@@ -1,14 +1,14 @@
-import os
-from dotenv import load_dotenv
-import requests
-from bs4 import BeautifulSoup
-import telebot
-from telebot import types
-import time
 import logging
-import schedule
+import os
+import time
 from multiprocessing import *
 
+import requests
+import schedule
+import telebot
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from telebot import types
 
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
@@ -27,8 +27,7 @@ def prepare_predictions():
     # dictionary with zodiacs and links to their pages
     zodiac_links = {}
     for i in divs:
-        zodiac_links[i.text] = "https://horo.mail.ru/" + i['href']
-        # print(i.text + " " + zodiac_links[i.text])
+        zodiac_links[i.text] = f"https://horo.mail.ru/{i['href']}"
 
     # getting links for the today prediction
     zodiac_prediction_links = {}
@@ -39,9 +38,8 @@ def prepare_predictions():
             if j.strong:
                 link = j['href']
                 if link[0] == '/':
-                    link = "https://horo.mail.ru" + link
+                    link = f"https://horo.mail.ru{link}"
                 zodiac_prediction_links[i] = link
-                # print(i + " " + zodiac_prediction_links[i])
                 break
 
     # getting predictions
@@ -56,19 +54,13 @@ def prepare_predictions():
 
 
 def zodiac_markup(markup):
-    item1 = types.KeyboardButton("Овен")
-    item2 = types.KeyboardButton("Рыбы")
-    item3 = types.KeyboardButton('Лев')
-    item4 = types.KeyboardButton('Близнецы')
-    item5 = types.KeyboardButton('Скорпион')
-    item6 = types.KeyboardButton('Весы')
-    item7 = types.KeyboardButton('Водолей')
-    item8 = types.KeyboardButton('Телец')
-    item9 = types.KeyboardButton('Рак')
-    item10 = types.KeyboardButton('Козерог')
-    item11 = types.KeyboardButton('Стрелец')
-    item12 = types.KeyboardButton('Дева')
-    markup.add(item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12)
+    names = ['Близнецы', 'Весы', 'Водолей', 'Дева',
+             'Козерог', 'Лев', 'Овен', 'Рак',
+             'Рыбы', 'Скорпион', 'Стрелец', 'Телец']
+    items = []
+    for name in names:
+        items.append(types.KeyboardButton(name))
+    markup.add(*items)
     return markup
 
 
@@ -88,54 +80,12 @@ def go_send_messages(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     zodiac_markup(markup)
     if message.chat.type == 'private':
-        if message.text == 'Овен':
+        if message.text in zodiac_predictions:
             bot.send_message(message.chat.id,
-                             zodiac_predictions['Овен'],
+                             zodiac_predictions[message.text],
                              reply_markup=markup)
-        if message.text == 'Рыбы':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Рыбы'],
-                             reply_markup=markup)
-        if message.text == 'Лев':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Лев'],
-                             reply_markup=markup)
-        if message.text == 'Близнецы':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Близнецы'],
-                             reply_markup=markup)
-        if message.text == 'Скорпион':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Скорпион'],
-                             reply_markup=markup)
-        if message.text == 'Весы':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Весы'],
-                             reply_markup=markup)
-        if message.text == 'Водолей':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Водолей'],
-                             reply_markup=markup)
-        if message.text == 'Телец':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Телец'],
-                             reply_markup=markup)
-        if message.text == 'Рак':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Рак'],
-                             reply_markup=markup)
-        if message.text == 'Козерог':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Козерог'],
-                             reply_markup=markup)
-        if message.text == 'Стрелец':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Стрелец'],
-                             reply_markup=markup)
-        if message.text == 'Дева':
-            bot.send_message(message.chat.id,
-                             zodiac_predictions['Дева'],
-                             reply_markup=markup)
+        else:
+            bot.send_message(message.chat.id, "Введен несуществующий знак зодиака")
 
 
 def start_process():
@@ -162,5 +112,3 @@ if __name__ == "__main__":
         print("Непредвиденная ошибка: ", r)
     finally:
         print("Здесь всё закончилось")
-
-
